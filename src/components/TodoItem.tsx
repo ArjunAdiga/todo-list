@@ -3,7 +3,7 @@ import Typography from "./Typography";
 import { Pencil, Trash } from "lucide-react";
 
 type TodoType = {
-  id: number;
+  id: string;
   text: string;
   isComplete: boolean;
 };
@@ -35,7 +35,12 @@ const TodoItem = ({
     }
   }, [isEdit]);
 
-  const handleOnCheck = (e:React.ChangeEvent<HTMLInputElement>,id:number) => { 
+  useEffect(() => {     // to update isChecked and text
+  setIsCompleteTodo(!!item?.isComplete);
+  setEditedText(item?.text)
+}, [item]);
+
+  const handleOnCheck = (e:React.ChangeEvent<HTMLInputElement>,id:string) => { 
     setIsCompleteTodo((prev) => !prev);
     setTodoArray((prev: TodoType[]) =>
       prev.map((todo: TodoType) =>
@@ -46,7 +51,7 @@ const TodoItem = ({
         setCheckedTodos((prev:number[]) => ([...prev,id]))
     }
     else {
-        setCheckedTodos((prev:number[]) => prev.filter(item => item !== id))
+        setCheckedTodos((prev:string[]) => prev.filter(item => item !== id))
     }
   };
 
@@ -62,7 +67,7 @@ const TodoItem = ({
     setIsEdit(false);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     // to delete the to do
     setTodoArray((prev: TodoType[]) =>
       prev.filter((item: TodoType) => item.id !== id)

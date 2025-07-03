@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
+import { v4 as uuidv4 } from 'uuid';
 import { BrushCleaning, ClipboardList, Trash } from "lucide-react";
 import Typography from "./Typography";
 import TodoItem from "./TodoItem";
 
 type TodoType = {
-  id: number;
+  id: string;
   text: string;
   isComplete: boolean;
 };
@@ -12,7 +13,7 @@ type TodoType = {
 const TodoList = () => {
   const [todoArray, setTodoArray] = useState<TodoType[]>(() => JSON.parse(localStorage.getItem("todos") || "[]")); // All todo data
   const [todoText, setTodoText] = useState(""); // Text in add todo input
-  const [checkedTodos,setCheckedTodos] = useState<number[]>([]) // to store the checked ids
+  const [checkedTodos,setCheckedTodos] = useState<string[]>([]) // to store the checked ids
 
   useEffect(() => {      // to store in local storage
   localStorage.setItem("todos", JSON.stringify(todoArray));
@@ -23,7 +24,7 @@ const TodoList = () => {
     setTodoArray((prev) => [
       ...prev,
       {
-        id: todoArray?.length + 1,
+        id: uuidv4(),
         isComplete: false,
         text: todoText,
       },
