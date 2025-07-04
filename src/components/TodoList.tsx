@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from "uuid";
 import { BrushCleaning, ClipboardList, Trash } from "lucide-react";
+import { DndContext, closestCenter } from "@dnd-kit/core";
+
+import {
+  arrayMove,
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+
 import Typography from "./Typography";
 import TodoItem from "./TodoItem";
 
@@ -11,13 +19,16 @@ type TodoType = {
 };
 
 const TodoList = () => {
-  const [todoArray, setTodoArray] = useState<TodoType[]>(() => JSON.parse(localStorage.getItem("todos") || "[]")); // All todo data
+  const [todoArray, setTodoArray] = useState<TodoType[]>(() =>
+    JSON.parse(localStorage.getItem("todos") || "[]")
+  ); // All todo data
   const [todoText, setTodoText] = useState(""); // Text in add todo input
-  const [checkedTodos,setCheckedTodos] = useState<string[]>([]) // to store the checked ids
+  const [checkedTodos, setCheckedTodos] = useState<string[]>([]); // to store the checked ids
 
-  useEffect(() => {      // to store in local storage
-  localStorage.setItem("todos", JSON.stringify(todoArray));
-}, [todoArray]);
+  useEffect(() => {
+    // to store in local storage
+    localStorage.setItem("todos", JSON.stringify(todoArray));
+  }, [todoArray]);
 
   const addTodo = () => {
     // Function that triggers on click of add button
@@ -32,12 +43,24 @@ const TodoList = () => {
     setTodoText("");
   };
 
-  const handleAllDelete = () => { 
-    setTodoArray((prev:TodoType[]) => prev.filter(item => !checkedTodos.includes(item.id)))
-    setCheckedTodos([])
-  }
+  const handleAllDelete = () => {
+    setTodoArray((prev: TodoType[]) =>
+      prev.filter((item) => !checkedTodos.includes(item.id))
+    );
+    setCheckedTodos([]);
+  };
 
- 
+  const handleDragEnd = (event: any) => {
+    // to drag and drop todos
+    const { active, over } = event;
+    if (active.id !== over.id) {
+      const oldIndex = todoArray.findIndex((item) => item.id === active.id);
+      const newIndex = todoArray.findIndex((item) => item.id === over.id);
+
+      const newOrder = arrayMove(todoArray, oldIndex, newIndex);
+      setTodoArray(newOrder);
+    }
+  };
 
   return (
     <div className="h-full">
@@ -57,9 +80,9 @@ const TodoList = () => {
           value={todoText}
           onChange={(e) => setTodoText(e.target.value)}
           onKeyDown={(e) => {
-            if(e.key === "Enter") {
-                e.preventDefault();
-                addTodo()
+            if (e.key === "Enter") {
+              e.preventDefault();
+              addTodo();
             }
           }}
           placeholder="Enter todo"
@@ -74,12 +97,14 @@ const TodoList = () => {
         >
           Add
         </button>
-        {checkedTodos?.length > 0 &&  <Trash
-              size={24}
-              color="red"
-              onClick={() => handleAllDelete()}
-              style={{ cursor: "pointer" }}
-            />}
+        {checkedTodos?.length > 0 && (
+          <Trash
+            size={24}
+            color="red"
+            onClick={() => handleAllDelete()}
+            style={{ cursor: "pointer" }}
+          />
+        )}
       </div>
       {todoArray?.length === 0 ? (
         <div
@@ -90,11 +115,35 @@ const TodoList = () => {
           <Typography variant="h2">No todos</Typography>
         </div>
       ) : (
-        <div className="flex items-center justify-center flex-col" style={{marginTop:"24px",gap:"4px",border:"1px solid #525252",borderRadius:"8px",padding:"8px"}}>
-          {todoArray?.map((item: TodoType, index: number) => (
-            <TodoItem item={item} index={index} setTodoArray={setTodoArray} setCheckedTodos={setCheckedTodos} />
-          ))}
-        </div>
+        <DndContext
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={todoArray.map((todo) => todo.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div
+              className="flex items-center justify-center flex-col"
+              style={{
+                marginTop: "24px",
+                gap: "4px",
+                border: "1px solid #525252",
+                borderRadius: "8px",
+                padding: "8px",
+              }}
+            >
+              {todoArray?.map((item: TodoType) => (
+                <TodoItem
+                  key={item.id}
+                  item={item}
+                  setTodoArray={setTodoArray}
+                  setCheckedTodos={setCheckedTodos}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       )}
     </div>
   );

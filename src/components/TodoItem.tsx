@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import Typography from "./Typography";
-import { Pencil, Trash } from "lucide-react";
+import { Pencil, Trash,GripVertical  } from "lucide-react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 type TodoType = {
   id: string;
@@ -10,20 +12,27 @@ type TodoType = {
 
 const TodoItem = ({
   item,
-  index,
   setTodoArray,
   setCheckedTodos,
+  key,
 }: {
-  index: number;
   setTodoArray: any;
   item: TodoType;
   setCheckedTodos:any;
+  key:string;
 }) => {
   const [isEdit, setIsEdit] = useState(false); // to edit
   const [isCompleteTodo, setIsCompleteTodo] = useState(!!item?.isComplete); //  for checkbox
   const [hover, setHover] = useState(false);
   const [editedText, setEditedText] = useState(item?.text);
   const ref = useRef<HTMLTextAreaElement>(null);
+
+   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
   useEffect(() => {
     if (isEdit && ref.current) {
@@ -78,11 +87,18 @@ const TodoItem = ({
     <>
       <div
         className="flex items-center p-2 w-full"
-        style={{ gap: "8px" }}
-        key={index}
+        ref={setNodeRef}
+      key={key}
+        style={{...style, gap: "8px" }}
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
       >
+         <GripVertical
+        className="cursor-grab text-gray-400"
+        {...listeners}
+        {...attributes}
+        size={16}
+      />
         <input
           checked={isCompleteTodo}
           onChange={(e) => handleOnCheck(e,item.id)}
